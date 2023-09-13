@@ -30,11 +30,13 @@ public class ApiTest {
     public void
     post_endpoint_response_matches_payload_data() {
 
-        String requestBody = "{\n" +
-                "  \"userId\": \"2\",\n" +
-                "  \"title\": \"batman\",\n" +
-                "  \"body\": \"Wayne\",\n" +
-                "  \"id\": \"102\" \n}";
+        String requestBody = """
+                {
+                  "userId": "2",
+                  "title": "batman",
+                  "body": "Wayne",
+                  "id": "102"\s
+                }""";
 
         Response response = given()
                 .header("Content-type", "application/json")
@@ -57,11 +59,13 @@ public class ApiTest {
     public void
     put_endpoint_response_matches_payload_data() {
 
-        String requestBody = "{\n" +
-                "  \"userId\": \"3\",\n" +
-                "  \"title\": \"superman\",\n" +
-                "  \"body\": \"Clark\",\n" +
-                "  \"id\": \"2\" \n}";
+        String requestBody = """
+                {
+                  "userId": "3",
+                  "title": "superman",
+                  "body": "Clark",
+                  "id": "2"\s
+                }""";
 
         Response response = given()
                 .header("Content-type", "application/json")

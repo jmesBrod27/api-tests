@@ -1,64 +1,118 @@
+import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.DisplayName;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import static io.restassured.RestAssured.given;
-import static io.restassured.RestAssured.when;
-
 
 public class ApiTest {
 
-//    @BeforeAll
-//    public static void setup() {
-//        RestAssured.baseURI = "";
-//    }
     @Test
     @DisplayName("Fetch body equals to 100 objects")
-    public void
-    lotto_resource_returns_200_with_expected_id_and_winners() {
+    public void getPostDetailsAndCheckTheyEqual100InLength()
+    {
 
-        Response response =
-                when()
-                .post("https://jsonplaceholder.typicode.com/posts")
-                .then()
-                .extract().response();
-        System.out.println(response);
-        //Assert.assertEquals(response.length(), 100);
-        Assert.assertEquals(response.statusCode(), 200);
-//        when().
-//                get("https://jsonplaceholder.typicode.com/posts/").
-//                then().
-//                statusCode(200).
-//                body("posts", equalTo(100));
-//                 //       "title", equalTo("hello"));
-//                //.assertThat();
+        ResponseAPI[] allResponseDetails = RestAssured.given().log().all()
+                .when().get("https://jsonplaceholder.typicode.com/posts").as(ResponseAPI[].class);
+        System.out.println("no of results: "+ allResponseDetails.length);
+
+        Assert.assertEquals(allResponseDetails[0].getUserId(),1);
+        Assert.assertEquals(allResponseDetails[0].getId(),1);
+        Assert.assertEquals(allResponseDetails[0].getTitle(),"sunt aut facere repellat provident occaecati excepturi optio reprehenderit");
+        Assert.assertEquals(allResponseDetails[0].getBody(),"quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto");
+        Assert.assertEquals(allResponseDetails.length,100);
+
     }
 
-
     @Test
-    @DisplayName("Post to create new resource and check if body match payload provided")
+    @DisplayName("Post to create new resource and check if body matches the payload provided")
     public void
     post_endpoint_response_matches_payload_data() {
 
         String requestBody = "{\n" +
-                "  \"title\": \"foo\",\n" +
-                "  \"body\": \"bar\",\n" +
-                "  \"id\": \"4\" \n}";
+                "  \"userId\": \"2\",\n" +
+                "  \"title\": \"batman\",\n" +
+                "  \"body\": \"Wayne\",\n" +
+                "  \"id\": \"102\" \n}";
 
         Response response = given()
                 .header("Content-type", "application/json")
                 .and()
                 .body(requestBody)
                 .when()
-                .post("https://my-json-server.typicode.com/jmesBrod27/api-tests/posts")
+                .post("https://jsonplaceholder.typicode.com/posts")
                 .then()
                 .extract().response();
-        System.out.println(response);
-//        assertEqualsNoOrder(201, response.statusCode());
-//        assertEqualsNoOrder("foo", response.jsonPath().getString("title"));
-//        Assertions.assertEquals("bar", response.jsonPath().getString("body"));
-//        Assertions.assertEquals("1", response.jsonPath().getString("userId"));
-//        Assertions.assertEquals("101", response.jsonPath().getString("id"));
+
+        Assert.assertEquals(response.statusCode(),201);
+        Assert.assertEquals(response.jsonPath().getString("title"),"batman" );
+        Assert.assertEquals(response.jsonPath().getString("body"), "Wayne");
+        Assert.assertEquals(response.jsonPath().getString("userId"),"2");
+        Assert.assertEquals(response.jsonPath().getString("id"),"101");
+
     }
-}
+    @Test
+    @DisplayName("Update resource and check if body matches the payload provided")
+    public void
+    put_endpoint_response_matches_payload_data() {
+
+        String requestBody = "{\n" +
+                "  \"userId\": \"3\",\n" +
+                "  \"title\": \"superman\",\n" +
+                "  \"body\": \"Clark\",\n" +
+                "  \"id\": \"2\" \n}";
+
+        Response response = given()
+                .header("Content-type", "application/json")
+                .and()
+                .body(requestBody)
+                .when()
+                .put("https://jsonplaceholder.typicode.com/posts/2")
+                .then()
+                .extract().response();
+
+        Assert.assertEquals(response.statusCode(),200);
+        Assert.assertEquals(response.jsonPath().getString("title"),"superman" );
+        Assert.assertEquals(response.jsonPath().getString("body"), "Clark");
+        Assert.assertEquals(response.jsonPath().getString("userId"),"3");
+        Assert.assertEquals(response.jsonPath().getString("id"),"2");
+    }
+
+    @Test
+    @DisplayName("delete a resource")
+    public void
+    delete_endpoint_resource() {
+
+        Response response = given()
+                .header("Content-type", "application/json")
+                .when()
+                .delete("https://jsonplaceholder.typicode.com/posts/2")
+                .then()
+                .extract().response();
+        Assert.assertEquals(response.statusCode(),200);
+    }
+
+    @Test
+    @DisplayName("Patch a resource and check if body matches the payload provided")
+    public void
+    patch_endpoint_response_matches_payload_data() {
+
+
+        String requestBody = "{\n" +
+                "  \"title\": \"flash\"}";
+
+        Response response = given()
+                .header("Content-type", "application/json")
+                .and()
+                .body(requestBody)
+                .when()
+                .patch("https://jsonplaceholder.typicode.com/posts/9")
+                .then()
+                .extract().response();
+
+        Assert.assertEquals(response.statusCode(),200);
+        Assert.assertEquals(response.jsonPath().getString("title"),"flash");
+        }
+    }
+

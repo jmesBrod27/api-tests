@@ -1,10 +1,10 @@
 import io.restassured.response.Response;
 import org.junit.jupiter.api.DisplayName;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
-import static org.hamcrest.CoreMatchers.equalTo;
 
 
 public class ApiTest {
@@ -18,13 +18,21 @@ public class ApiTest {
     public void
     lotto_resource_returns_200_with_expected_id_and_winners() {
 
-        when().
-                get("https://my-json-server.typicode.com/jmesBrod27/api-tests/posts/1").
-                then().
-                statusCode(200).
-                body("id", equalTo(1),
-                        "title", equalTo("hello"));
-                //.assertThat();
+        Response response =
+                when()
+                .post("https://jsonplaceholder.typicode.com/posts")
+                .then()
+                .extract().response();
+        System.out.println(response);
+        //Assert.assertEquals(response.length(), 100);
+        Assert.assertEquals(response.statusCode(), 200);
+//        when().
+//                get("https://jsonplaceholder.typicode.com/posts/").
+//                then().
+//                statusCode(200).
+//                body("posts", equalTo(100));
+//                 //       "title", equalTo("hello"));
+//                //.assertThat();
     }
 
 

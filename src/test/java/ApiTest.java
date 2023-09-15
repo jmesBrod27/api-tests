@@ -1,122 +1,157 @@
 import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import io.restassured.response.Response;
-import org.junit.jupiter.api.DisplayName;
 import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 import static io.restassured.RestAssured.given;
 
 public class ApiTest {
 
+    String baseUrl = "";
+    int lengthOfList = 0;
+    String requestBodyToPost = "";
+    String requestBodyToPut = "";
+    String requestBodyToPatch = "";
+
+    private Properties prop;
+
+    @BeforeClass
+    public void setup() throws IOException {
+        InputStream input = new FileInputStream("data.properties");
+        prop = new Properties();
+
+        prop.load(input);
+
+        // Get all values
+        baseUrl = prop.getProperty("baseUri");
+        lengthOfList = Integer.parseInt(prop.getProperty("listLength"));
+        requestBodyToPost = prop.getProperty("requestBodyToPost");
+        requestBodyToPut = prop.getProperty("requestBodyToPut");
+        requestBodyToPatch = prop.getProperty("requestBodyToPatch");
+    }
+
     @Test
-    @DisplayName("Fetch body equals to 100 objects")
-    public void getPostDetailsAndCheckTheyEqual100InLength()
-    {
+    public void get_post_details_and_check_they_equal_100_in_length() {
+        String title ="sunt aut facere repellat provident occaecati excepturi optio reprehenderit";
+        String body ="quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto";
 
         ResponseAPI[] allResponseDetails = RestAssured.given().log().all()
-                .when().get("https://jsonplaceholder.typicode.com/posts").as(ResponseAPI[].class);
-        System.out.println("no of results: "+ allResponseDetails.length);
+                .when().get(baseUrl + "/posts").as(ResponseAPI[].class);
+        System.out.println("no of results: " + allResponseDetails.length);
 
-        Assert.assertEquals(allResponseDetails[0].getUserId(),1);
-        Assert.assertEquals(allResponseDetails[0].getId(),1);
-        Assert.assertEquals(allResponseDetails[0].getTitle(),"sunt aut facere repellat provident occaecati excepturi optio reprehenderit");
-        Assert.assertEquals(allResponseDetails[0].getBody(),"quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto");
-        Assert.assertEquals(allResponseDetails.length,100);
+        Assert.assertEquals(allResponseDetails[0].getUserId(), 1);
+        Assert.assertEquals(allResponseDetails[0].getId(), 1);
+        Assert.assertEquals(allResponseDetails[0].getTitle(), title);
+        Assert.assertEquals(allResponseDetails[0].getBody(), body);
+        Assert.assertEquals(allResponseDetails.length, lengthOfList);
 
     }
 
     @Test
-    @DisplayName("Post to create new resource and check if body matches the payload provided")
-    public void
-    post_endpoint_response_matches_payload_data() {
+    public void get_post_details_and_check_they_equal_100_in_length_using_jsonPath() {
 
-        String requestBody = """
-                {
-                  "userId": "2",
-                  "title": "batman",
-                  "body": "Wayne",
-                  "id": "102"\s
-                }""";
+        Response response = given()
+                .contentType(ContentType.JSON)
+                .when()
+                .get(baseUrl + "/posts")
+                .then()
+                .extract().response();
+
+        Assert.assertEquals(200, response.statusCode());
+        Assert.assertEquals(response.jsonPath().getList("posts").size(), lengthOfList);
+    }
+
+    @Test
+    public void post_endpoint_response_matches_payload_data() {
 
         Response response = given()
                 .header("Content-type", "application/json")
                 .and()
-                .body(requestBody)
+                .body(requestBodyToPost)
                 .when()
-                .post("https://jsonplaceholder.typicode.com/posts")
+                .post(baseUrl + "/posts")
                 .then()
                 .extract().response();
 
-        Assert.assertEquals(response.statusCode(),201);
-        Assert.assertEquals(response.jsonPath().getString("title"),"batman" );
-        Assert.assertEquals(response.jsonPath().getString("body"), "Wayne");
-        Assert.assertEquals(response.jsonPath().getString("userId"),"2");
-        Assert.assertEquals(response.jsonPath().getString("id"),"101");
+        Assert.assertEquals(response.statusCode(), 201);
+        Assert.assertEquals(response.jsonPath().getString("userId"), "2");
+        Assert.assertEquals(response.jsonPath().getString("id"), "101");
 
     }
-    @Test
-    @DisplayName("Update resource and check if body matches the payload provided")
-    public void
-    put_endpoint_response_matches_payload_data() {
 
-        String requestBody = """
-                {
-                  "userId": "3",
-                  "title": "superman",
-                  "body": "Clark",
-                  "id": "2"\s
-                }""";
+    @Test
+    public void put_endpoint_response_matches_payload_data() {
 
         Response response = given()
                 .header("Content-type", "application/json")
                 .and()
-                .body(requestBody)
+                .body(requestBodyToPut)
                 .when()
-                .put("https://jsonplaceholder.typicode.com/posts/2")
+                .put(baseUrl + "/posts/2")
                 .then()
                 .extract().response();
 
-        Assert.assertEquals(response.statusCode(),200);
-        Assert.assertEquals(response.jsonPath().getString("title"),"superman" );
-        Assert.assertEquals(response.jsonPath().getString("body"), "Clark");
-        Assert.assertEquals(response.jsonPath().getString("userId"),"3");
-        Assert.assertEquals(response.jsonPath().getString("id"),"2");
+        Assert.assertEquals(response.statusCode(), 200);
+        Assert.assertEquals(response.jsonPath().getString("userId"), "3");
+        Assert.assertEquals(response.jsonPath().getString("id"), "2");
     }
 
     @Test
-    @DisplayName("delete a resource")
-    public void
-    delete_endpoint_resource() {
+    public void delete_endpoint_resource() {
 
         Response response = given()
                 .header("Content-type", "application/json")
                 .when()
-                .delete("https://jsonplaceholder.typicode.com/posts/2")
+                .delete(baseUrl + "/posts/2")
                 .then()
                 .extract().response();
-        Assert.assertEquals(response.statusCode(),200);
+        Assert.assertEquals(response.statusCode(), 200);
     }
 
     @Test
-    @DisplayName("Patch a resource and check if body matches the payload provided")
-    public void
-    patch_endpoint_response_matches_payload_data() {
-
-
-        String requestBody = "{\n" +
-                "  \"title\": \"flash\"}";
+    public void patch_endpoint_response_matches_payload_data() {
 
         Response response = given()
                 .header("Content-type", "application/json")
                 .and()
-                .body(requestBody)
+                .body(requestBodyToPatch)
                 .when()
-                .patch("https://jsonplaceholder.typicode.com/posts/9")
+                .patch(baseUrl + "/posts/9")
                 .then()
                 .extract().response();
 
-        Assert.assertEquals(response.statusCode(),200);
-        Assert.assertEquals(response.jsonPath().getString("title"),"flash");
-        }
+        Assert.assertEquals(response.statusCode(), 200);
     }
+
+    @Test
+    public void wit_different_properties() throws IOException {
+        Properties differentProperties = new Properties();
+        FileInputStream input = new FileInputStream("dataCopy.properties");
+        differentProperties.load(input);
+        input.close();
+
+        // Re-run the tests with different properties
+        prop = differentProperties;
+
+        baseUrl = prop.getProperty("baseUri");
+        lengthOfList = Integer.parseInt(prop.getProperty("listLength"));
+        requestBodyToPost = prop.getProperty("requestBodyToPost");
+        requestBodyToPut = prop.getProperty("requestBodyToPut");
+        requestBodyToPatch = prop.getProperty("requestBodyToPatch");
+
+        get_post_details_and_check_they_equal_100_in_length_using_jsonPath();
+        get_post_details_and_check_they_equal_100_in_length_using_jsonPath();
+        post_endpoint_response_matches_payload_data();
+        put_endpoint_response_matches_payload_data();
+        delete_endpoint_resource();
+        patch_endpoint_response_matches_payload_data();
+    }
+}
 

@@ -131,7 +131,7 @@ public class ApiTest {
     }
 
     @Test
-    public void wit_different_properties() throws IOException {
+    public void with_different_properties() throws IOException {
         Properties differentProperties = new Properties();
         FileInputStream input = new FileInputStream("dataCopy.properties");
         differentProperties.load(input);
